@@ -1,0 +1,74 @@
+// Linking Libraries
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+// Function Prototypes
+int processFile(const char *inputFile, const char *outputFile);
+
+// Main Function Loop
+int main() {
+    const char *inputFile = "data.txt";
+    const char *outputFile = "valid_floats.txt";
+
+    // Processing The File
+    int invalidCount = processFile(inputFile, outputFile);
+
+    // Displaying Number Of Invalid Float Values Found
+    if (invalidCount >= 0) {
+        printf("Processing complete.\n");
+        printf("Number of invalid float values: %d\n", invalidCount);
+    } else {
+        printf("File processing failed.\n");
+    }
+
+    return 0;
+}
+
+// 
+int processFile(const char *inputFile, const char *outputFile) {
+    FILE *inFile, *outFile;
+    char buffer[256]; // Buffer to store each token read from the file
+    int invalidCount = 0;
+    float value;
+
+    // Open the input file for reading
+    inFile = fopen(inputFile, "r");
+    if (inFile == NULL) {
+        perror("Error opening input file");
+        return -1; // Return error code
+    }
+
+    // Open the output file for writing
+    outFile = fopen(outputFile, "w");
+    if (outFile == NULL) {
+        perror("Error opening output file");
+        fclose(inFile); // Ensure input file is closed
+        return -1; // Return error code
+    }
+
+    // Read each token from the file
+    while (fscanf(inFile, "%s", buffer) != EOF) {
+        char *endPtr;
+        value = strtof(buffer, &endPtr); // Attempt to convert to float
+
+        // Check if the conversion was successful
+        if (*endPtr == '\0') {
+            fprintf(outFile, "%.6f\n", value); // Write valid float to output
+        } else {
+            invalidCount++; // Increment invalid counter
+        }
+    }
+
+    // Check for file processing errors
+    if (ferror(inFile)) {
+        perror("Error reading the file");
+    }
+
+    // Close the files
+    fclose(inFile);
+    fclose(outFile);
+
+    return invalidCount; // Return the count of invalid floats
+}
