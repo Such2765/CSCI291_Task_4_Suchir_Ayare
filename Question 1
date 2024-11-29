@@ -1,74 +1,69 @@
 // Linking Libraries
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <ctype.h>
+#include <string.h>
 
-// Function Prototypes
+// Function prototypes
 int processFile(const char *inputFile, const char *outputFile);
 
-// Main Function Loop
+// Main Loop
 int main() {
     const char *inputFile = "data.txt";
-    const char *outputFile = "valid_floats.txt";
+    const char *outputFile = "valid_data.txt";
 
-    // Processing The File
     int invalidCount = processFile(inputFile, outputFile);
-
-    // Displaying Number Of Invalid Float Values Found
     if (invalidCount >= 0) {
-        printf("Processing complete.\n");
         printf("Number of invalid float values: %d\n", invalidCount);
-    } else {
-        printf("File processing failed.\n");
+        printf("Valid float values have been written to %s\n", outputFile);
     }
-
     return 0;
 }
 
-// 
+// Function to process the file and filter valid float values
 int processFile(const char *inputFile, const char *outputFile) {
-    FILE *inFile, *outFile;
-    char buffer[256]; // Buffer to store each token read from the file
-    int invalidCount = 0;
-    float value;
-
-    // Open the input file for reading
-    inFile = fopen(inputFile, "r");
+    FILE *inFile = fopen(inputFile, "r");
     if (inFile == NULL) {
         perror("Error opening input file");
-        return -1; // Return error code
+        return -1;
     }
 
-    // Open the output file for writing
-    outFile = fopen(outputFile, "w");
+    FILE *outFile = fopen(outputFile, "w");
     if (outFile == NULL) {
         perror("Error opening output file");
-        fclose(inFile); // Ensure input file is closed
-        return -1; // Return error code
+        fclose(inFile);
+        return -1;
     }
 
-    // Read each token from the file
+    // Chararcter buffer array of 100
+    char buffer[100];
+    int invalidCount = 0;
+    double value;
+
     while (fscanf(inFile, "%s", buffer) != EOF) {
         char *endPtr;
-        value = strtof(buffer, &endPtr); // Attempt to convert to float
+        value = strtod(buffer, &endPtr);
 
-        // Check if the conversion was successful
-        if (*endPtr == '\0') {
-            fprintf(outFile, "%.6f\n", value); // Write valid float to output
+        // If the entire buffer is not consumed, it's invalid
+        if (*endPtr != '\0') {
+            invalidCount++;
         } else {
-            invalidCount++; // Increment invalid counter
+            fprintf(outFile, "%.2f\n", value);
         }
     }
 
-    // Check for file processing errors
+    // Check for hardware failure
     if (ferror(inFile)) {
-        perror("Error reading the file");
+        perror("Error reading input file");
+        fclose(inFile);
+        fclose(outFile);
+        return -1;
     }
 
-    // Close the files
+    // Cleanup (Close the file)
     fclose(inFile);
     fclose(outFile);
 
-    return invalidCount; // Return the count of invalid floats
+    // Return the count of invalid floats
+    return invalidCount;
 }
